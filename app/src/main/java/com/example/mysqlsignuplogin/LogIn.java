@@ -1,24 +1,113 @@
 package com.example.mysqlsignuplogin;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LogIn extends AppCompatActivity {
 
-    TextView createAccountBtnTextView,skip;
+    EditText ed_email,ed_password;
+
+    String str_email,str_password;
+    String url = "https://doctorshelpcare.000webhostapp.com/login.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
 
-        createAccountBtnTextView = findViewById(R.id.create_account_text_view_btn);
-        createAccountBtnTextView.setOnClickListener((v)-> startActivity(new Intent(LogIn.this, SignUp.class)));
+        ed_email = findViewById(R.id.ed_email);
+        ed_password = findViewById(R.id.ed_password);
+    }
 
-        skip = findViewById(R.id.skipp);
-        skip.setOnClickListener((v)-> startActivity(new Intent(LogIn.this,MainActivity.class)));
+
+
+    public void moveToRegistration(View view) {
+        startActivity(new Intent(getApplicationContext(),SignUp.class));
+        finish();
+    }
+
+
+    public void login(View view) {
+        if(ed_email.getText().toString().equals("")){
+            Toast.makeText(this, "Enter Email", Toast.LENGTH_SHORT).show();
+        }
+        else if(ed_password.getText().toString().equals("")){
+            Toast.makeText(this, "Enter Password", Toast.LENGTH_SHORT).show();
+        }
+        else{
+
+
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Please Wait..");
+
+            progressDialog.show();
+
+            str_email = ed_email.getText().toString().trim();
+            str_password = ed_password.getText().toString().trim();
+
+
+            StringRequest request = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    progressDialog.dismiss();
+
+                    if(response.equalsIgnoreCase("logged in successfully")){
+
+                        ed_email.setText("");
+                        ed_password.setText("");
+                        startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                        Toast.makeText(LogIn.this, response, Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(LogIn.this, response, Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            },new Response.ErrorListener(){
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    progressDialog.dismiss();
+                    Toast.makeText(LogIn.this, error.getMessage().toString(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            ){
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String,String> params = new HashMap<String, String>();
+                    params.put("email",str_email);
+                    params.put("password",str_password);
+                    return params;
+
+                }
+            };
+
+            RequestQueue requestQueue = Volley.newRequestQueue(LogIn.this);
+            requestQueue.add(request);
+
+        }
+    }
+
+    public void skip(View view) {
+        Intent intent = new Intent(LogIn.this,MainActivity.class);
+        startActivity(intent);
     }
 }
